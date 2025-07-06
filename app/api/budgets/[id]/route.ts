@@ -1,16 +1,17 @@
 // app/api/budgets/[id]/route.ts
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Budget from '@/models/Budget';
 import mongoose, { Types, Error as MongooseError } from 'mongoose';
 import { ZodError } from 'zod';
 
+// Alternative 1: Using NextRequest and explicit context typing
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   await dbConnect();
-  const { id } = params;
+  const { id } = context.params;
 
   try {
     if (!Types.ObjectId.isValid(id)) {
@@ -31,11 +32,11 @@ export async function GET(
 }
 
 export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   await dbConnect();
-  const { id } = params;
+  const { id } = context.params;
 
   try {
     if (!Types.ObjectId.isValid(id)) {
@@ -77,11 +78,11 @@ export async function PUT(
 }
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   await dbConnect();
-  const { id } = params;
+  const { id } = context.params;
 
   try {
     if (!Types.ObjectId.isValid(id)) {

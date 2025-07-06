@@ -1,7 +1,7 @@
-// components/transaction-form.tsx
+// components/transaction-form.tsx (updated)
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react"; // Add useEffect
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -20,7 +20,15 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils"; // Make sure this utility is correct
+import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ICategory } from "@/models/Category"; // Import ICategory
 
 const formSchema = z.object({
   amount: z.coerce.number().positive("Amount must be positive."),
@@ -28,7 +36,8 @@ const formSchema = z.object({
     required_error: "A date is required.",
   }),
   description: z.string().min(1, "Description is required.").max(200, "Description is too long."),
-  type: z.enum(["income", "expense"]), // Added type for consistency with model, will be used in Stage 2/3
+  type: z.enum(["income", "expense"]),
+  category: z.string().optional(), // Now optional string (ObjectId)
 });
 
 type TransactionFormValues = z.infer<typeof formSchema>;
@@ -38,6 +47,7 @@ interface TransactionFormProps {
   onSubmit: (data: TransactionFormValues) => void;
   onCancel?: () => void;
   isLoading?: boolean;
+  categories: ICategory[]; // Pass categories to the form
 }
 
 export function TransactionForm({
@@ -45,16 +55,38 @@ export function TransactionForm({
   onSubmit,
   onCancel,
   isLoading,
+  categories,
 }: TransactionFormProps) {
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: initialData || {
+    defaultValues: {
       amount: 0,
       date: new Date(),
       description: "",
-      type: "expense", // Default to expense
+      type: "expense",
+      category: initialData?.category?.toString() || "", // Convert ObjectId to string
     },
   });
+
+  // Reset form with initialData when it changes (for editing)
+  useEffect(() => {
+    if (initialData) {
+      form.reset({
+        ...initialData,
+        date: new Date(initialData.date), // Ensure date is a Date object
+        category: initialData.category?.toString() || "",
+      });
+    } else {
+      form.reset({
+        amount: 0,
+        date: new Date(),
+        description: "",
+        type: "expense",
+        category: "",
+      });
+    }
+  }, [initialData, form]);
+
 
   return (
     <Form {...form}>
@@ -126,12 +158,49 @@ export function TransactionForm({
             </FormItem>
           )}
         />
-        {/* Type field will be hidden for Stage 1, exposed in Stage 2/3 if needed */}
         <FormField
           control={form.control}
           name="type"
           render={({ field }) => (
-            <input type="hidden" {...field} />
+            <FormItem>
+              <FormLabel>Type</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="expense">Expense</SelectItem>
+                  <SelectItem value="income">Income</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="category"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Category</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category (optional)" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {categories.filter(c => c.type === form.watch('type')).map((category) => (
+                    <SelectItem key={category._id?.toString()} value={category._id?.toString() || ""}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
           )}
         />
         <div className="flex gap-2">

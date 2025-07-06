@@ -5,14 +5,12 @@ import Budget from '@/models/Budget';
 import mongoose, { Types, Error as MongooseError } from 'mongoose';
 import { ZodError } from 'zod';
 
-// REMOVE THE 'type RouteContext' DEFINITION FROM HERE ENTIRELY
-
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } } // <--- CRITICAL FIX HERE
+  { params }: { params: { id: string } }
 ) {
   await dbConnect();
-  const { id } = params; // Now you can destructure params directly
+  const { id } = params;
 
   try {
     if (!Types.ObjectId.isValid(id)) {
@@ -34,7 +32,7 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } } // <--- CRITICAL FIX HERE
+  { params }: { params: { id: string } }
 ) {
   await dbConnect();
   const { id } = params;
@@ -70,7 +68,7 @@ export async function PUT(
       }, { status: 409 });
     }
 
-    if (error instanceof ZodError) { // Keep if you use Zod for request body validation
+    if (error instanceof ZodError) {
       return NextResponse.json({ success: false, error: error.issues }, { status: 400 });
     }
 
@@ -80,7 +78,7 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } } // <--- CRITICAL FIX HERE
+  { params }: { params: { id: string } }
 ) {
   await dbConnect();
   const { id } = params;

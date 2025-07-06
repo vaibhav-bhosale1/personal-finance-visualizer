@@ -1,12 +1,21 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Budget from '@/models/Budget';
-import mongoose, { Types, Error as MongooseError } from 'mongoose'; // ✅ Fixed ValidationError import
+import mongoose, { Types, Error as MongooseError } from 'mongoose';
 import { ZodError } from 'zod';
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+type RouteContext = {
+  params: {
+    id: string;
+  };
+};
+
+export async function GET(
+  request: Request,
+  context: RouteContext
+) {
   await dbConnect();
-  const { id } = params;
+  const { id } = context.params;
 
   try {
     if (!Types.ObjectId.isValid(id)) {
@@ -26,9 +35,12 @@ export async function GET(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(
+  request: Request,
+  context: RouteContext
+) {
   await dbConnect();
-  const { id } = params;
+  const { id } = context.params;
 
   try {
     if (!Types.ObjectId.isValid(id)) {
@@ -36,8 +48,6 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     }
 
     const body = await request.json();
-
-    // Optional: validate body using Zod here if needed
 
     const budget = await Budget.findByIdAndUpdate(id, body, {
       new: true,
@@ -71,9 +81,12 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: Request,
+  context: RouteContext
+) {
   await dbConnect();
-  const { id } = params;
+  const { id } = context.params;
 
   try {
     if (!Types.ObjectId.isValid(id)) {

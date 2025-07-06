@@ -6,6 +6,8 @@ import { TransactionForm } from "@/components/transaction-form";
 import { TransactionList } from "@/components/transaction-list";
 import { MonthlyExpensesChart } from "@/components/monthly-expenses-chart";
 import { ITransaction } from "@/models/Transaction"; // Import the interface
+import { Button } from "@/components/ui/button";
+import { redirect } from "next/navigation";
 
 export default function HomePage() {
   const [transactions, setTransactions] = useState<ITransaction[]>([]);
@@ -97,13 +99,18 @@ export default function HomePage() {
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold text-center">Personal Finance Visualizer</h1>
-
+      <p className="text-center text-gray-600">
+        Track your expenses and visualize your monthly spending.
+      </p>
+      <Button onClick={()=>redirect('/dashboard')}>
+        dashboard
+      </Button>
       {error && <div className="p-4 bg-red-100 text-red-700 border border-red-300 rounded-md">{error}</div>}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
           <h2 className="text-xl font-semibold mb-4">Add New Transaction</h2>
-          <TransactionForm onSubmit={handleAddTransaction} isLoading={isLoading} />
+          <TransactionForm onSubmit={handleAddTransaction} isLoading={isLoading} categories={[]} />
         </div>
         <div>
           <MonthlyExpensesChart transactions={transactions} />

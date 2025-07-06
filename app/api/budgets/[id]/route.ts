@@ -4,18 +4,19 @@ import Budget from '@/models/Budget';
 import mongoose, { Types, Error as MongooseError } from 'mongoose';
 import { ZodError } from 'zod';
 
-type RouteContext = {
-  params: {
-    id: string;
-  };
-};
+// REMOVE THIS SECTION:
+// type RouteContext = {
+//   params: {
+//     id: string;
+//   };
+// };
 
 export async function GET(
   request: Request,
-  context: RouteContext
+  { params }: { params: { id: string } } // <-- CHANGE MADE HERE
 ) {
   await dbConnect();
-  const { id } = context.params;
+  const { id } = params; // <-- Destructure params directly
 
   try {
     if (!Types.ObjectId.isValid(id)) {
@@ -37,10 +38,10 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  context: RouteContext
+  { params }: { params: { id: string } } // <-- CHANGE MADE HERE
 ) {
   await dbConnect();
-  const { id } = context.params;
+  const { id } = params; // <-- Destructure params directly
 
   try {
     if (!Types.ObjectId.isValid(id)) {
@@ -83,10 +84,10 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  context: RouteContext
+  { params }: { params: { id: string } } // <-- CHANGE MADE HERE
 ) {
   await dbConnect();
-  const { id } = context.params;
+  const { id } = params; // <-- Destructure params directly
 
   try {
     if (!Types.ObjectId.isValid(id)) {

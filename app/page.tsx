@@ -1,20 +1,22 @@
-// app/page.tsx
+// app/page.tsx (or app/(dashboard)/dashboard/page.tsx)
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { TransactionForm } from "@/components/transaction-form";
 import { TransactionList } from "@/components/transaction-list";
 import { MonthlyExpensesChart } from "@/components/monthly-expenses-chart";
-import { ITransaction } from "@/models/Transaction"; // Import the interface
+import { ITransaction } from "@/models/Transaction";
+import { ICategory } from "@/models/Category"; // Import ICategory
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation"; // Import useRouter
 
 export default function HomePage() {
   const [transactions, setTransactions] = useState<ITransaction[]>([]);
+  const [categories, setCategories] = useState<ICategory[]>([]); // New state for categories
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const router = useRouter(); // Initialize the useRouter hook
+  const router = useRouter();
 
   const fetchTransactions = useCallback(async () => {
     setIsLoading(true);
@@ -28,16 +30,32 @@ export default function HomePage() {
       setTransactions(data);
     } catch (err: any) {
       setError(err.message || "Failed to fetch transactions.");
-      console.error("Fetch error:", err);
+      console.error("Fetch transactions error:", err);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
+  const fetchCategories = useCallback(async () => {
+    try {
+      const res = await fetch("/api/categories");
+      if (!res.ok) {
+        throw new Error(`Error fetching categories: ${res.statusText}`);
+      }
+      const data: ICategory[] = await res.json();
+      setCategories(data);
+    } catch (err: any) {
+      setError(err.message || "Failed to fetch categories.");
+      console.error("Fetch categories error:", err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchTransactions();
-  }, [fetchTransactions]);
+    fetchCategories(); // Fetch categories when component mounts
+  }, [fetchTransactions, fetchCategories]);
 
+  // ... (handleAddTransaction, handleEditTransaction, handleDeleteTransaction - no changes needed here)
   const handleAddTransaction = async (data: any) => {
     setIsLoading(true);
     try {
@@ -47,11 +65,11 @@ export default function HomePage() {
         body: JSON.stringify(data),
       });
       if (!res.ok) {
-        const errorData = await res.json(); // Added to get more specific error from API
+        const errorData = await res.json();
         throw new Error(`Error adding transaction: ${errorData.error || res.statusText}`);
       }
       await res.json();
-      fetchTransactions(); // Re-fetch all transactions to update the list and chart
+      fetchTransactions();
     } catch (err: any) {
       setError(err.message || "Failed to add transaction.");
       console.error("Add error:", err);
@@ -69,7 +87,7 @@ export default function HomePage() {
         body: JSON.stringify(data),
       });
       if (!res.ok) {
-        const errorData = await res.json(); // Added to get more specific error from API
+        const errorData = await res.json();
         throw new Error(`Error updating transaction: ${errorData.error || res.statusText}`);
       }
       await res.json();
@@ -89,7 +107,7 @@ export default function HomePage() {
         method: "DELETE",
       });
       if (!res.ok) {
-        const errorData = await res.json(); // Added to get more specific error from API
+        const errorData = await res.json();
         throw new Error(`Error deleting transaction: ${errorData.error || res.statusText}`);
       }
       fetchTransactions();
@@ -101,26 +119,25 @@ export default function HomePage() {
     }
   };
 
-  // Handler for the dashboard button click
+
   const handleDashboardClick = () => {
-    router.push('/dashboard'); // Use router.push for client-side navigation
+    router.push('/dashboard');
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 p-4"> {/* Added padding */}
       <h1 className="text-3xl font-bold text-center">Personal Finance Visualizer</h1>
       <p className="text-center text-gray-600">
         Track your expenses and visualize your monthly spending.
       </p>
-     
+    
       {error && <div className="p-4 bg-red-100 text-red-700 border border-red-300 rounded-md">{error}</div>}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
           <h2 className="text-xl font-semibold mb-4">Add New Transaction</h2>
-          {/* Note: In Stage 1, categories might be an empty array or not used. 
-              In Stage 2/3, you'd fetch and pass real categories here. */}
-          <TransactionForm onSubmit={handleAddTransaction} isLoading={isLoading} categories={[]} />
+         
+          <TransactionForm onSubmit={handleAddTransaction} isLoading={isLoading} categories={categories} />
         </div>
         <div>
           <MonthlyExpensesChart transactions={transactions} />

@@ -9,7 +9,7 @@ export async function GET(request: Request) {
     const categories = await Category.find({});
     return NextResponse.json(categories);
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
 
@@ -23,4 +23,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: error.message }, { status: 400 });
   }
 }
-// Add PUT and DELETE for categories if needed, similar to transactions/[id]/route.ts

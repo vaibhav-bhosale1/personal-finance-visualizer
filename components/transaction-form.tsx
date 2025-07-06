@@ -1,7 +1,7 @@
-// components/transaction-form.tsx (updated)
+// components/transaction-form.tsx
 "use client";
 
-import { useState, useEffect } from "react"; // Add useEffect
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -28,26 +28,35 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ICategory } from "@/models/Category"; // Import ICategory
+import { ICategory } from "@/models/Category"; // Ensure this import is correct
 
+// Define a constant for the "No Category" value to avoid magic strings
+const NO_CATEGORY_VALUE = "none"; // You can choose any non-empty string here
+
+// Define the Zod schema for transaction form validation
 const formSchema = z.object({
   amount: z.coerce.number().positive("Amount must be positive."),
   date: z.date({
     required_error: "A date is required.",
   }),
   description: z.string().min(1, "Description is required.").max(200, "Description is too long."),
-  type: z.enum(["income", "expense"]),
-  category: z.string().optional(), // Now optional string (ObjectId)
+  type: z.enum(["income", "expense"], {
+    required_error: "Transaction type is required.",
+  }),
+  // IMPORTANT: Handle the category field.
+  // Transform NO_CATEGORY_VALUE to null, otherwise keep the value.
+  category: z.string().optional().nullable().transform(e => e === NO_CATEGORY_VALUE ? null : e),
 });
 
+// Infer the TypeScript type from the Zod schema
 type TransactionFormValues = z.infer<typeof formSchema>;
 
 interface TransactionFormProps {
-  initialData?: TransactionFormValues & { _id?: string };
+  initialData?: TransactionFormValues & { _id?: string }; // initialData might include _id from DB
   onSubmit: (data: TransactionFormValues) => void;
   onCancel?: () => void;
   isLoading?: boolean;
-  categories: ICategory[]; // Pass categories to the form
+  categories: ICategory[]; // List of available categories
 }
 
 export function TransactionForm({
@@ -57,40 +66,47 @@ export function TransactionForm({
   isLoading,
   categories,
 }: TransactionFormProps) {
+  // Initialize react-hook-form
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       amount: 0,
       date: new Date(),
       description: "",
-      type: "expense",
-      category: initialData?.category?.toString() || "", // Convert ObjectId to string
+      type: "expense", // Default to expense
+      // Convert ObjectId to string or use NO_CATEGORY_VALUE if null
+      category: initialData?.category?.toString() || NO_CATEGORY_VALUE,
     },
   });
 
-  // Reset form with initialData when it changes (for editing)
+  // Effect to reset form when initialData changes (for editing transactions)
   useEffect(() => {
     if (initialData) {
       form.reset({
         ...initialData,
         date: new Date(initialData.date), // Ensure date is a Date object
-        category: initialData.category?.toString() || "",
+        // Convert ObjectId to string or use NO_CATEGORY_VALUE if null
+        category: initialData.category?.toString() || NO_CATEGORY_VALUE,
       });
     } else {
+      // Reset to default for new transaction
       form.reset({
         amount: 0,
         date: new Date(),
         description: "",
         type: "expense",
-        category: "",
+        category: NO_CATEGORY_VALUE, // Default to NO_CATEGORY_VALUE for new transactions
       });
     }
   }, [initialData, form]);
 
+  // Filter categories based on the selected transaction type
+  const filteredCategories = categories.filter(c => c.type === form.watch('type'));
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        {/* Amount Field */}
         <FormField
           control={form.control}
           name="amount"
@@ -104,6 +120,8 @@ export function TransactionForm({
             </FormItem>
           )}
         />
+
+        {/* Date Field */}
         <FormField
           control={form.control}
           name="date"
@@ -145,6 +163,8 @@ export function TransactionForm({
             </FormItem>
           )}
         />
+
+        {/* Description Field */}
         <FormField
           control={form.control}
           name="description"
@@ -158,6 +178,8 @@ export function TransactionForm({
             </FormItem>
           )}
         />
+
+        {/* Type Field (Income/Expense) */}
         <FormField
           control={form.control}
           name="type"
@@ -179,21 +201,30 @@ export function TransactionForm({
             </FormItem>
           )}
         />
+
+        {/* Category Field */}
         <FormField
           control={form.control}
           name="category"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Category</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select
+                onValueChange={field.onChange} // The Zod transform handles converting 'none' to null
+                value={field.value || NO_CATEGORY_VALUE} // Display NO_CATEGORY_VALUE for null field.value
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a category (optional)" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {categories.filter(c => c.type === form.watch('type')).map((category) => (
-                    <SelectItem key={category._id?.toString()} value={category._id?.toString() || ""}>
+                  <SelectItem value={NO_CATEGORY_VALUE}>No Category</SelectItem> {/* Use the distinct value */}
+                  {filteredCategories.map((category) => (
+                    <SelectItem
+                      key={category._id?.toString()}
+                      value={category._id?.toString() || ""} // Standard category IDs will be strings
+                    >
                       {category.name}
                     </SelectItem>
                   ))}
@@ -203,6 +234,8 @@ export function TransactionForm({
             </FormItem>
           )}
         />
+
+        {/* Action Buttons */}
         <div className="flex gap-2">
           <Button type="submit" disabled={isLoading}>
             {initialData ? "Save Changes" : "Add Transaction"}

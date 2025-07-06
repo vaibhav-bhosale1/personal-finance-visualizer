@@ -6,15 +6,13 @@ export interface IBudget extends Document {
   year: number;
   budgetAmount: number;
 }
-
 const BudgetSchema: Schema = new Schema({
   category: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
-  month: { type: Number, required: true, min: 0, max: 11 },
+  month: { type: Number, required: true, min: 0, max: 11 }, // 0-11 for Jan-Dec
   year: { type: Number, required: true },
-  budgetAmount: { type: Number, required: true, min: 0 },
+  budgetAmount: { type: Number, required: true },
 }, {
-  // Ensure unique budget per category per month/year
-  indexes: [{ unique: true, fields: ['category', 'month', 'year'] }]
+  timestamps: true,
 });
 
 export default mongoose.models.Budget || mongoose.model<IBudget>('Budget', BudgetSchema);

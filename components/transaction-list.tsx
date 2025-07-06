@@ -52,10 +52,15 @@ export function TransactionList({ transactions, onEdit, onDelete }: TransactionL
         <div className="mb-8 p-4 border rounded-md">
           <h2 className="text-xl font-semibold mb-4">Edit Transaction</h2>
           <TransactionForm
-            initialData={editingTransaction}
-            onSubmit={handleFormSubmit}
-            onCancel={() => setEditingTransaction(null)}
-          />
+                      initialData={{
+                          ...editingTransaction,
+                          _id: typeof editingTransaction?._id === "string" ? editingTransaction._id : undefined,
+                          category: editingTransaction?.category
+                              ? editingTransaction.category.toString()
+                              : undefined,
+                      }}
+                      onSubmit={handleFormSubmit}
+                      onCancel={() => setEditingTransaction(null)} categories={[]}          />
         </div>
       )}
 
@@ -75,7 +80,7 @@ export function TransactionList({ transactions, onEdit, onDelete }: TransactionL
             </TableHeader>
             <TableBody>
               {transactions.map((transaction) => (
-                <TableRow key={transaction._id}>
+                <TableRow key={transaction._id as string}>
                   <TableCell>{format(new Date(transaction.date), "PPP")}</TableCell>
                   <TableCell>{transaction.description}</TableCell>
                   <TableCell className="text-right">₹{transaction.amount.toFixed(2)}</TableCell>

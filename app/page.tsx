@@ -7,12 +7,14 @@ import { TransactionList } from "@/components/transaction-list";
 import { MonthlyExpensesChart } from "@/components/monthly-expenses-chart";
 import { ITransaction } from "@/models/Transaction"; // Import the interface
 import { Button } from "@/components/ui/button";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation"; // Import useRouter
 
 export default function HomePage() {
   const [transactions, setTransactions] = useState<ITransaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const router = useRouter(); // Initialize the useRouter hook
 
   const fetchTransactions = useCallback(async () => {
     setIsLoading(true);
@@ -45,7 +47,8 @@ export default function HomePage() {
         body: JSON.stringify(data),
       });
       if (!res.ok) {
-        throw new Error(`Error adding transaction: ${res.statusText}`);
+        const errorData = await res.json(); // Added to get more specific error from API
+        throw new Error(`Error adding transaction: ${errorData.error || res.statusText}`);
       }
       await res.json();
       fetchTransactions(); // Re-fetch all transactions to update the list and chart
@@ -66,7 +69,8 @@ export default function HomePage() {
         body: JSON.stringify(data),
       });
       if (!res.ok) {
-        throw new Error(`Error updating transaction: ${res.statusText}`);
+        const errorData = await res.json(); // Added to get more specific error from API
+        throw new Error(`Error updating transaction: ${errorData.error || res.statusText}`);
       }
       await res.json();
       fetchTransactions();
@@ -85,7 +89,8 @@ export default function HomePage() {
         method: "DELETE",
       });
       if (!res.ok) {
-        throw new Error(`Error deleting transaction: ${res.statusText}`);
+        const errorData = await res.json(); // Added to get more specific error from API
+        throw new Error(`Error deleting transaction: ${errorData.error || res.statusText}`);
       }
       fetchTransactions();
     } catch (err: any) {
@@ -96,20 +101,25 @@ export default function HomePage() {
     }
   };
 
+  // Handler for the dashboard button click
+  const handleDashboardClick = () => {
+    router.push('/dashboard'); // Use router.push for client-side navigation
+  };
+
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold text-center">Personal Finance Visualizer</h1>
       <p className="text-center text-gray-600">
         Track your expenses and visualize your monthly spending.
       </p>
-      <Button onClick={()=>redirect('/dashboard')}>
-        dashboard
-      </Button>
+     
       {error && <div className="p-4 bg-red-100 text-red-700 border border-red-300 rounded-md">{error}</div>}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
           <h2 className="text-xl font-semibold mb-4">Add New Transaction</h2>
+          {/* Note: In Stage 1, categories might be an empty array or not used. 
+              In Stage 2/3, you'd fetch and pass real categories here. */}
           <TransactionForm onSubmit={handleAddTransaction} isLoading={isLoading} categories={[]} />
         </div>
         <div>

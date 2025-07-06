@@ -1,22 +1,18 @@
+// app/api/budgets/[id]/route.ts
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Budget from '@/models/Budget';
 import mongoose, { Types, Error as MongooseError } from 'mongoose';
 import { ZodError } from 'zod';
 
-// REMOVE THIS SECTION:
-// type RouteContext = {
-//   params: {
-//     id: string;
-//   };
-// };
+// REMOVE THE 'type RouteContext' DEFINITION FROM HERE ENTIRELY
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } } // <-- CHANGE MADE HERE
+  { params }: { params: { id: string } } // <--- CRITICAL FIX HERE
 ) {
   await dbConnect();
-  const { id } = params; // <-- Destructure params directly
+  const { id } = params; // Now you can destructure params directly
 
   try {
     if (!Types.ObjectId.isValid(id)) {
@@ -38,10 +34,10 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } } // <-- CHANGE MADE HERE
+  { params }: { params: { id: string } } // <--- CRITICAL FIX HERE
 ) {
   await dbConnect();
-  const { id } = params; // <-- Destructure params directly
+  const { id } = params;
 
   try {
     if (!Types.ObjectId.isValid(id)) {
@@ -74,7 +70,7 @@ export async function PUT(
       }, { status: 409 });
     }
 
-    if (error instanceof ZodError) {
+    if (error instanceof ZodError) { // Keep if you use Zod for request body validation
       return NextResponse.json({ success: false, error: error.issues }, { status: 400 });
     }
 
@@ -84,10 +80,10 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } } // <-- CHANGE MADE HERE
+  { params }: { params: { id: string } } // <--- CRITICAL FIX HERE
 ) {
   await dbConnect();
-  const { id } = params; // <-- Destructure params directly
+  const { id } = params;
 
   try {
     if (!Types.ObjectId.isValid(id)) {

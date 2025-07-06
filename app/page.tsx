@@ -128,9 +128,7 @@ export default function HomePage() {
     }
   };
 
-  const handleDashboardClick = () => {
-    router.push('/dashboard');
-  };
+
 
   if (isLoading) {
     return (

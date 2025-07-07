@@ -45,7 +45,7 @@ This application implements the following features across three stages:
 
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/your-username/personal-finance-visualizer.git](https://github.com/your-username/personal-finance-visualizer.git)
+    git clone https://github.com/vaibhav-bhosale1/personal-finance-visualizer
     cd personal-finance-visualizer
     ```
 
